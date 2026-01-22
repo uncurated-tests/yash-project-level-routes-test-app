@@ -1,8 +1,8 @@
 import { headers, cookies } from 'next/headers';
 
-export default function ProtectedPage() {
-  const headersList = headers();
-  const cookieStore = cookies();
+export default async function ProtectedPage() {
+  const headersList = await headers();
+  const cookieStore = await cookies();
 
   const allHeaders: Record<string, string> = {};
   headersList.forEach((value, key) => {

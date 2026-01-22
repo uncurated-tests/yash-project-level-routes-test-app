@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 
-export default function SubdomainHome() {
-  const headersList = headers();
+export default async function SubdomainHome() {
+  const headersList = await headers();
   const host = headersList.get('host');
 
   return (

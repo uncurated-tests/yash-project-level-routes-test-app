@@ -1,9 +1,10 @@
-export default function SearchResultsPage({
+export default async function SearchResultsPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const query = searchParams.q;
+  const params = await searchParams;
+  const query = params.q;
 
   return (
     <main>
@@ -22,15 +23,15 @@ export default function SearchResultsPage({
 
       <h2>Query Parameters</h2>
       <pre style={{ background: '#f5f5f5', padding: '1rem', overflow: 'auto' }}>
-        {JSON.stringify(searchParams, null, 2)}
+        {JSON.stringify(params, null, 2)}
       </pre>
 
       <div style={{ marginTop: '2rem', padding: '1rem', background: '#e8f5e9' }}>
         <p>Mock search results would appear here...</p>
         <ul>
-          <li>Result 1 for "{query}"</li>
-          <li>Result 2 for "{query}"</li>
-          <li>Result 3 for "{query}"</li>
+          <li>Result 1 for &quot;{query}&quot;</li>
+          <li>Result 2 for &quot;{query}&quot;</li>
+          <li>Result 3 for &quot;{query}&quot;</li>
         </ul>
       </div>
     </main>

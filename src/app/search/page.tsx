@@ -1,8 +1,10 @@
-export default function SearchPage({
+export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const params = await searchParams;
+
   return (
     <main>
       <h1>Search Page</h1>
@@ -23,7 +25,7 @@ export default function SearchPage({
 
       <h2>Current Query Parameters</h2>
       <pre style={{ background: '#f5f5f5', padding: '1rem', overflow: 'auto' }}>
-        {JSON.stringify(searchParams, null, 2)}
+        {JSON.stringify(params, null, 2)}
       </pre>
 
       <form method="get" style={{ marginTop: '1rem' }}>

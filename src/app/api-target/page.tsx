@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 
-export default function ApiTarget() {
-  const headersList = headers();
+export default async function ApiTarget() {
+  const headersList = await headers();
   const allHeaders: Record<string, string> = {};
   headersList.forEach((value, key) => {
     allHeaders[key] = value;

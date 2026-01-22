@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 
-export default function Home() {
-  const headersList = headers();
+export default async function Home() {
+  const headersList = await headers();
   const allHeaders: Record<string, string> = {};
   headersList.forEach((value, key) => {
     allHeaders[key] = value;

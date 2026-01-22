@@ -1,7 +1,12 @@
 import { headers } from 'next/headers';
 
-export default function BlogPost({ params }: { params: { slug: string } }) {
-  const headersList = headers();
+export default async function BlogPost({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const headersList = await headers();
   const allHeaders: Record<string, string> = {};
   headersList.forEach((value, key) => {
     allHeaders[key] = value;
@@ -9,8 +14,8 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
 
   return (
     <main>
-      <h1>Blog Post: {params.slug}</h1>
-      <p>This is the blog post page for slug: <code>{params.slug}</code></p>
+      <h1>Blog Post: {slug}</h1>
+      <p>This is the blog post page for slug: <code>{slug}</code></p>
 
       <h2>Use Cases</h2>
       <ul>

@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 
-export default function GeoPage() {
-  const headersList = headers();
+export default async function GeoPage() {
+  const headersList = await headers();
 
   // Common geo headers from Vercel
   const geoHeaders = {

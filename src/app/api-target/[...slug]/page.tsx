@@ -1,7 +1,12 @@
 import { headers } from 'next/headers';
 
-export default function ApiTargetCatchAll({ params }: { params: { slug: string[] } }) {
-  const headersList = headers();
+export default async function ApiTargetCatchAll({
+  params,
+}: {
+  params: Promise<{ slug: string[] }>;
+}) {
+  const { slug } = await params;
+  const headersList = await headers();
   const allHeaders: Record<string, string> = {};
   headersList.forEach((value, key) => {
     allHeaders[key] = value;
@@ -10,7 +15,7 @@ export default function ApiTargetCatchAll({ params }: { params: { slug: string[]
   return (
     <main>
       <h1>API Target (Catch-All)</h1>
-      <p>Slug segments: <code>{params.slug.join(' / ')}</code></p>
+      <p>Slug segments: <code>{slug.join(' / ')}</code></p>
 
       <h2>Use Cases</h2>
       <ul>
