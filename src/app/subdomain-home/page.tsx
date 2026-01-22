@@ -1,35 +1,72 @@
 import { headers } from 'next/headers';
+import { PathIndicator } from '@/components/PathIndicator';
+import { HeadersDisplay } from '@/components/HeadersDisplay';
 
 export default async function SubdomainHome() {
   const headersList = await headers();
   const host = headersList.get('host');
 
+  const allHeaders: Record<string, string> = {};
+  headersList.forEach((value, key) => {
+    allHeaders[key] = value;
+  });
+
   return (
     <main>
+      <PathIndicator />
+      
       <h1>Subdomain Home</h1>
-      <p>You reached this page via host-based routing!</p>
-      <p>Current host: <code>{host}</code></p>
+      <p>Target page for host-based routing rules.</p>
 
-      <h2>Use Cases</h2>
-      <ul>
-        <li>Test <code>has</code> condition with host matching</li>
-        <li>Test subdomain-based routing (e.g., app.example.com vs www.example.com)</li>
-        <li>Test host prefix/suffix matching</li>
-      </ul>
+      <div className="card" style={{ background: 'var(--accent-light)', borderColor: 'var(--accent)' }}>
+        <h4 style={{ color: 'var(--accent)', margin: '0 0 0.5rem 0' }}>
+          Current Host
+        </h4>
+        <p style={{ margin: 0, fontFamily: 'ui-monospace, monospace' }}>
+          <code>{host}</code>
+        </p>
+      </div>
 
-      <h3>Example Rule (Match app. subdomain)</h3>
-      <pre style={{ background: '#f5f5f5', padding: '1rem' }}>{`{
+      <h2>Example Rules</h2>
+
+      <h3>Match Subdomain Prefix</h3>
+      <pre><code>{`{
   "src": "/(.*)",
   "dest": "/subdomain-home",
   "has": [{ "type": "host", "value": { "pre": "app." } }]
-}`}</pre>
+}`}</code></pre>
 
-      <h3>Example Rule (Match specific host)</h3>
-      <pre style={{ background: '#f5f5f5', padding: '1rem' }}>{`{
+      <h3>Match Exact Host</h3>
+      <pre><code>{`{
   "src": "/(.*)",
   "dest": "/subdomain-home",
   "has": [{ "type": "host", "value": "app.example.com" }]
-}`}</pre>
+}`}</code></pre>
+
+      <h3>Match Host Suffix</h3>
+      <pre><code>{`{
+  "src": "/(.*)",
+  "dest": "/subdomain-home",
+  "has": [{ "type": "host", "value": { "suf": ".example.com" } }]
+}`}</code></pre>
+
+      <h3>Match Host with Regex</h3>
+      <pre><code>{`{
+  "src": "/(.*)",
+  "dest": "/subdomain-home",
+  "has": [{ "type": "host", "value": { "re": "^(app|dashboard)\\\\..*" } }]
+}`}</code></pre>
+
+      <h2>How to Test Locally</h2>
+      <p>Add entries to your <code>/etc/hosts</code> file:</p>
+      <pre><code>{`127.0.0.1  app.localhost
+127.0.0.1  dashboard.localhost`}</code></pre>
+      <p>Then visit <code>http://app.localhost:3000</code></p>
+
+      <HeadersDisplay 
+        headers={allHeaders} 
+        highlight={['host']}
+      />
     </main>
   );
 }

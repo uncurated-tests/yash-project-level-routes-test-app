@@ -1,4 +1,6 @@
 import { headers } from 'next/headers';
+import { PathIndicator } from '@/components/PathIndicator';
+import { HeadersDisplay } from '@/components/HeadersDisplay';
 
 export default async function GeoPage() {
   const headersList = await headers();
@@ -13,6 +15,8 @@ export default async function GeoPage() {
     'x-vercel-ip-timezone': headersList.get('x-vercel-ip-timezone'),
   };
 
+  const hasGeoHeaders = Object.values(geoHeaders).some(v => v !== null);
+
   const allHeaders: Record<string, string> = {};
   headersList.forEach((value, key) => {
     allHeaders[key] = value;
@@ -20,36 +24,78 @@ export default async function GeoPage() {
 
   return (
     <main>
-      <h1>Geo Routing Test Page</h1>
-      <p>This page helps test geo-based routing rules.</p>
+      <PathIndicator />
+      
+      <h1>Geo Routing Test</h1>
+      <p>Test geographic/location-based routing rules using Vercel&apos;s geo headers.</p>
 
-      <h2>Use Cases</h2>
-      <ul>
-        <li>Test <code>has</code> with header matching for country codes</li>
-        <li>Test routing based on <code>x-vercel-ip-country</code></li>
-        <li>Test geo-based redirects or content variations</li>
-      </ul>
+      <div className="card" style={{ 
+        background: hasGeoHeaders ? 'var(--success-light)' : 'var(--warning-light)', 
+        borderColor: hasGeoHeaders ? 'var(--success)' : 'var(--warning)' 
+      }}>
+        <h4 style={{ color: hasGeoHeaders ? 'var(--success)' : 'var(--warning)', margin: '0 0 0.5rem 0' }}>
+          {hasGeoHeaders ? 'Geo Headers Detected' : 'No Geo Headers'}
+        </h4>
+        {hasGeoHeaders ? (
+          <pre style={{ background: 'transparent', margin: 0 }}>
+            <code>{JSON.stringify(geoHeaders, null, 2)}</code>
+          </pre>
+        ) : (
+          <p style={{ margin: 0 }}>
+            Geo headers are added by Vercel in production. Deploy to see them.
+          </p>
+        )}
+      </div>
 
-      <h3>Example Rule (Redirect EU users)</h3>
-      <pre style={{ background: '#f5f5f5', padding: '1rem' }}>{`{
+      <h2>Example Rules</h2>
+
+      <h3>Redirect EU Users</h3>
+      <pre><code>{`{
   "src": "/(.*)",
   "dest": "/eu/$1",
   "has": [{
     "type": "header",
     "key": "x-vercel-ip-country",
-    "value": { "inc": ["DE", "FR", "IT", "ES", "NL"] }
+    "value": { "inc": ["DE", "FR", "IT", "ES", "NL", "BE", "AT"] }
   }]
-}`}</pre>
+}`}</code></pre>
 
-      <h2>Detected Geo Headers</h2>
-      <pre style={{ background: '#e3f2fd', padding: '1rem', overflow: 'auto' }}>
-        {JSON.stringify(geoHeaders, null, 2)}
-      </pre>
+      <h3>Block Specific Country</h3>
+      <pre><code>{`{
+  "src": "/(.*)",
+  "status": 403,
+  "has": [{
+    "type": "header",
+    "key": "x-vercel-ip-country",
+    "value": "XX"
+  }]
+}`}</code></pre>
 
-      <h2>All Headers</h2>
-      <pre style={{ background: '#f5f5f5', padding: '1rem', overflow: 'auto' }}>
-        {JSON.stringify(allHeaders, null, 2)}
-      </pre>
+      <h3>Regional Content</h3>
+      <pre><code>{`{
+  "src": "/pricing",
+  "dest": "/pricing-us",
+  "has": [{
+    "type": "header",
+    "key": "x-vercel-ip-country",
+    "value": "US"
+  }]
+}`}</code></pre>
+
+      <h2>Available Geo Headers</h2>
+      <ul>
+        <li><code>x-vercel-ip-country</code> - ISO 3166-1 alpha-2 country code</li>
+        <li><code>x-vercel-ip-country-region</code> - ISO 3166-2 region code</li>
+        <li><code>x-vercel-ip-city</code> - City name</li>
+        <li><code>x-vercel-ip-latitude</code> - Latitude</li>
+        <li><code>x-vercel-ip-longitude</code> - Longitude</li>
+        <li><code>x-vercel-ip-timezone</code> - Timezone (e.g., America/New_York)</li>
+      </ul>
+
+      <HeadersDisplay 
+        headers={allHeaders} 
+        highlight={['x-vercel-ip']}
+      />
     </main>
   );
 }

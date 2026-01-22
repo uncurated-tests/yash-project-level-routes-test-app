@@ -1,4 +1,6 @@
 import { headers } from 'next/headers';
+import { PathIndicator } from '@/components/PathIndicator';
+import { HeadersDisplay } from '@/components/HeadersDisplay';
 
 export default async function HeadersTest() {
   const headersList = await headers();
@@ -14,29 +16,64 @@ export default async function HeadersTest() {
 
   return (
     <main>
-      <h1>Headers Test Page</h1>
-      <p>This page displays all request headers to verify header routing rules.</p>
+      <PathIndicator />
+      
+      <h1>Headers Test</h1>
+      <p>This page displays all request headers. Use it to verify header routing rules are working.</p>
 
-      <h2>Use Cases</h2>
-      <ul>
-        <li>Test <code>headers</code> rules that add custom headers</li>
-        <li>Test <code>transforms</code> that modify request/response headers</li>
-        <li>Test <code>has</code>/<code>missing</code> conditions on headers</li>
-      </ul>
-
-      {customHeaders.length > 0 && (
-        <>
-          <h2>Custom/Notable Headers</h2>
-          <pre style={{ background: '#e8f5e9', padding: '1rem', overflow: 'auto' }}>
-            {JSON.stringify(Object.fromEntries(customHeaders), null, 2)}
+      {customHeaders.length > 0 ? (
+        <div className="card" style={{ background: 'var(--success-light)', borderColor: 'var(--success)' }}>
+          <h4 style={{ color: 'var(--success)', margin: '0 0 0.5rem 0' }}>
+            Custom Headers Detected ({customHeaders.length})
+          </h4>
+          <pre style={{ background: 'transparent', margin: 0 }}>
+            <code>{JSON.stringify(Object.fromEntries(customHeaders), null, 2)}</code>
           </pre>
-        </>
+        </div>
+      ) : (
+        <div className="card" style={{ background: 'var(--warning-light)', borderColor: 'var(--warning)' }}>
+          <h4 style={{ color: 'var(--warning)', margin: '0 0 0.5rem 0' }}>No Custom Headers</h4>
+          <p style={{ margin: 0 }}>Add a header rule to see custom headers appear here.</p>
+        </div>
       )}
 
-      <h2>All Request Headers</h2>
-      <pre style={{ background: '#f5f5f5', padding: '1rem', overflow: 'auto' }}>
-        {JSON.stringify(allHeaders, null, 2)}
-      </pre>
+      <h2>Example Header Rules</h2>
+
+      <h3>Add Custom Header</h3>
+      <pre><code>{`{
+  "src": "/headers-test",
+  "headers": {
+    "X-Custom-Header": "my-value",
+    "X-Request-Id": "12345"
+  },
+  "continue": true
+}`}</code></pre>
+
+      <h3>Add Headers to All Routes</h3>
+      <pre><code>{`{
+  "src": "/(.*)",
+  "headers": {
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff"
+  },
+  "continue": true
+}`}</code></pre>
+
+      <h3>Cache Control Headers</h3>
+      <pre><code>{`{
+  "src": "/api/(.*)",
+  "headers": {
+    "Cache-Control": "no-store, must-revalidate"
+  },
+  "continue": true
+}`}</code></pre>
+
+      <HeadersDisplay 
+        headers={allHeaders} 
+        title="All Request Headers"
+        defaultOpen={true}
+        highlight={['x-', 'cache-control', 'authorization']}
+      />
     </main>
   );
 }

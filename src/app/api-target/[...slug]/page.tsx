@@ -1,4 +1,6 @@
 import { headers } from 'next/headers';
+import { PathIndicator } from '@/components/PathIndicator';
+import { HeadersDisplay } from '@/components/HeadersDisplay';
 
 export default async function ApiTargetCatchAll({
   params,
@@ -14,19 +16,57 @@ export default async function ApiTargetCatchAll({
 
   return (
     <main>
+      <PathIndicator />
+      
       <h1>API Target (Catch-All)</h1>
-      <p>Slug segments: <code>{slug.join(' / ')}</code></p>
+      <p>This page catches all paths under /api-target/</p>
 
-      <h2>Use Cases</h2>
+      <div className="card" style={{ background: 'var(--accent-light)', borderColor: 'var(--accent)' }}>
+        <h4 style={{ color: 'var(--accent)', margin: '0 0 0.5rem 0' }}>
+          Captured Path Segments
+        </h4>
+        <p style={{ margin: 0, fontFamily: 'ui-monospace, monospace' }}>
+          {slug.map((s, i) => (
+            <span key={i}>
+              {i > 0 && ' / '}
+              <code>{s}</code>
+            </span>
+          ))}
+        </p>
+      </div>
+
+      <h2>Path Info</h2>
       <ul>
-        <li>Test rewrites with catch-all params</li>
-        <li>Test path forwarding like <code>/external-api/(.*)</code> to <code>/api-target/$1</code></li>
+        <li>Full path: <code>/api-target/{slug.join('/')}</code></li>
+        <li>Segments: <code>{JSON.stringify(slug)}</code></li>
+        <li>Segment count: {slug.length}</li>
       </ul>
 
-      <h2>Request Headers</h2>
-      <pre style={{ background: '#f5f5f5', padding: '1rem', overflow: 'auto' }}>
-        {JSON.stringify(allHeaders, null, 2)}
-      </pre>
+      <h2>Example Rewrite Rules</h2>
+
+      <h3>Forward All Paths</h3>
+      <pre><code>{`{
+  "src": "/v2/(.+)",
+  "dest": "/api-target/$1"
+}`}</code></pre>
+
+      <h3>Prefix Rewrite</h3>
+      <pre><code>{`{
+  "src": "/legacy/:path*",
+  "dest": "/api-target/:path*"
+}`}</code></pre>
+
+      <h2>Test Links</h2>
+      <ul>
+        <li><a href="/api-target/users">/api-target/users</a></li>
+        <li><a href="/api-target/users/123">/api-target/users/123</a></li>
+        <li><a href="/api-target/users/123/posts">/api-target/users/123/posts</a></li>
+      </ul>
+
+      <HeadersDisplay 
+        headers={allHeaders} 
+        highlight={['x-']}
+      />
     </main>
   );
 }

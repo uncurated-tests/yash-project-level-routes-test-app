@@ -1,34 +1,45 @@
+import { PathIndicator } from '@/components/PathIndicator';
+
 export default function LoginPage() {
   return (
     <main>
-      <h1>Login Page</h1>
-      <p>You were redirected here because you don't have valid authentication.</p>
+      <PathIndicator />
+      
+      <h1>Login</h1>
+      <p>This is the login page - a target for auth-based redirects.</p>
 
-      <h2>Use Cases</h2>
+      <div className="card" style={{ background: 'var(--warning-light)', borderColor: 'var(--warning)' }}>
+        <h4 style={{ color: 'var(--warning)', margin: '0 0 0.5rem 0' }}>
+          Redirected Here?
+        </h4>
+        <p style={{ margin: 0 }}>
+          If you were redirected from <code>/protected</code>, the auth rule is working!
+        </p>
+      </div>
+
+      <h2>Set Auth Cookie</h2>
+      <p>After &quot;logging in&quot;, set a cookie to access protected pages:</p>
+      <pre><code>document.cookie = &quot;auth=valid; path=/&quot;</code></pre>
+
+      <h2>Test Links</h2>
       <ul>
-        <li>Target for auth redirect rules</li>
-        <li>Test <code>has</code>/<code>missing</code> cookie conditions that redirect to login</li>
+        <li><a href="/protected">Try /protected</a> (should redirect here without auth)</li>
+        <li><a href="/">Back to Home</a></li>
       </ul>
 
-      <h3>Example Rule</h3>
-      <pre style={{ background: '#f5f5f5', padding: '1rem' }}>{`{
-  "src": "/protected",
-  "dest": "/login",
-  "missing": [{ "type": "cookie", "key": "auth" }]
-}`}</pre>
-
-      <form style={{ marginTop: '2rem' }}>
+      <h2>Mock Login Form</h2>
+      <form action="#" method="post" style={{ maxWidth: '300px' }}>
         <div style={{ marginBottom: '1rem' }}>
-          <label>
-            Username:
-            <input type="text" style={{ marginLeft: '0.5rem' }} />
+          <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem' }}>
+            Username
           </label>
+          <input type="text" name="username" placeholder="Enter username" style={{ width: '100%' }} />
         </div>
         <div style={{ marginBottom: '1rem' }}>
-          <label>
-            Password:
-            <input type="password" style={{ marginLeft: '0.5rem' }} />
+          <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem' }}>
+            Password
           </label>
+          <input type="password" name="password" placeholder="Enter password" style={{ width: '100%' }} />
         </div>
         <button type="submit">Login</button>
       </form>

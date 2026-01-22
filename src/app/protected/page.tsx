@@ -1,4 +1,6 @@
 import { headers, cookies } from 'next/headers';
+import { PathIndicator } from '@/components/PathIndicator';
+import { HeadersDisplay } from '@/components/HeadersDisplay';
 
 export default async function ProtectedPage() {
   const headersList = await headers();
@@ -17,36 +19,70 @@ export default async function ProtectedPage() {
   const authCookie = cookieStore.get('auth');
   const authHeader = headersList.get('authorization');
 
+  const hasAuth = authCookie || authHeader;
+
   return (
     <main>
+      <PathIndicator />
+      
       <h1>Protected Page</h1>
-      <p>
-        If you see this page, you passed the authentication check
-        (or no routing rule is blocking you).
-      </p>
+      <p>This page helps test authentication-based routing rules.</p>
 
-      <h2>Use Cases</h2>
-      <ul>
-        <li>Test <code>has</code> condition with cookie: redirect if no valid auth cookie</li>
-        <li>Test <code>missing</code> condition with header: block if no Authorization header</li>
-        <li>Test conditional routing based on auth state</li>
-      </ul>
+      <div className="card" style={{ 
+        background: hasAuth ? 'var(--success-light)' : 'var(--warning-light)', 
+        borderColor: hasAuth ? 'var(--success)' : 'var(--warning)' 
+      }}>
+        <h4 style={{ color: hasAuth ? 'var(--success)' : 'var(--warning)', margin: '0 0 0.5rem 0' }}>
+          {hasAuth ? 'Authenticated' : 'Not Authenticated'}
+        </h4>
+        <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+          <li>Auth Cookie: <code>{authCookie ? authCookie.value : '(not set)'}</code></li>
+          <li>Authorization Header: <code>{authHeader || '(not set)'}</code></li>
+        </ul>
+      </div>
 
-      <h2>Auth Status</h2>
-      <ul>
-        <li>Auth Cookie: <code>{authCookie ? authCookie.value : '(not set)'}</code></li>
-        <li>Authorization Header: <code>{authHeader || '(not set)'}</code></li>
-      </ul>
+      <h2>How to Test</h2>
+      <div className="card-grid">
+        <div className="card">
+          <h4>Set Cookie in DevTools</h4>
+          <p>Run in console:<br/><code>document.cookie = &quot;auth=valid&quot;</code></p>
+        </div>
+        <div className="card">
+          <h4>Use curl with Header</h4>
+          <p><code>curl -H &quot;Authorization: Bearer token&quot; URL</code></p>
+        </div>
+      </div>
 
-      <h2>All Cookies</h2>
-      <pre style={{ background: '#fff3e0', padding: '1rem', overflow: 'auto' }}>
-        {JSON.stringify(allCookies, null, 2)}
-      </pre>
+      <h2>Example Rules</h2>
 
-      <h2>All Headers</h2>
-      <pre style={{ background: '#f5f5f5', padding: '1rem', overflow: 'auto' }}>
-        {JSON.stringify(allHeaders, null, 2)}
-      </pre>
+      <h3>Redirect if Missing Auth Cookie</h3>
+      <pre><code>{`{
+  "src": "/protected",
+  "dest": "/login",
+  "missing": [{ "type": "cookie", "key": "auth" }]
+}`}</code></pre>
+
+      <h3>Redirect if Cookie Value is Invalid</h3>
+      <pre><code>{`{
+  "src": "/protected",
+  "dest": "/login",
+  "has": [{ "type": "cookie", "key": "auth", "value": { "neq": "valid" } }]
+}`}</code></pre>
+
+      <h3>Block if Missing Authorization Header</h3>
+      <pre><code>{`{
+  "src": "/protected",
+  "status": 401,
+  "missing": [{ "type": "header", "key": "Authorization" }]
+}`}</code></pre>
+
+      <h2>Current Cookies</h2>
+      <pre><code>{JSON.stringify(allCookies, null, 2) || '{}'}</code></pre>
+
+      <HeadersDisplay 
+        headers={allHeaders} 
+        highlight={['authorization', 'cookie']}
+      />
     </main>
   );
 }

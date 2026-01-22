@@ -1,3 +1,5 @@
+import { PathIndicator } from '@/components/PathIndicator';
+
 export default async function SearchResultsPage({
   searchParams,
 }: {
@@ -8,32 +10,52 @@ export default async function SearchResultsPage({
 
   return (
     <main>
+      <PathIndicator />
+      
       <h1>Search Results</h1>
+      
       {query ? (
-        <p>Showing results for: <strong>{query}</strong></p>
+        <div className="card" style={{ background: 'var(--success-light)', borderColor: 'var(--success)' }}>
+          <h4 style={{ color: 'var(--success)', margin: '0 0 0.5rem 0' }}>
+            Results for: &quot;{query}&quot;
+          </h4>
+          <p style={{ margin: 0 }}>
+            If you came from <code>/search?q={query}</code> via a rewrite, the rule is working!
+          </p>
+        </div>
       ) : (
-        <p>No search query provided.</p>
+        <div className="card" style={{ background: 'var(--warning-light)', borderColor: 'var(--warning)' }}>
+          <h4 style={{ color: 'var(--warning)', margin: '0 0 0.5rem 0' }}>
+            No Search Query
+          </h4>
+          <p style={{ margin: 0 }}>
+            Try <a href="/search?q=test">/search?q=test</a> with a rewrite rule to see results.
+          </p>
+        </div>
       )}
 
-      <h2>Use Cases</h2>
-      <ul>
-        <li>Target for query-based rewrite rules</li>
-        <li>Verify query params are preserved through rewrites</li>
-      </ul>
+      <h2>Mock Results</h2>
+      {query ? (
+        <div className="card">
+          <ul className="link-list">
+            <li><a href="#"><span>Result 1 for &quot;{query}&quot;</span><span className="arrow">&rarr;</span></a></li>
+            <li><a href="#"><span>Result 2 for &quot;{query}&quot;</span><span className="arrow">&rarr;</span></a></li>
+            <li><a href="#"><span>Result 3 for &quot;{query}&quot;</span><span className="arrow">&rarr;</span></a></li>
+          </ul>
+        </div>
+      ) : (
+        <p>Enter a search query to see results.</p>
+      )}
 
       <h2>Query Parameters</h2>
-      <pre style={{ background: '#f5f5f5', padding: '1rem', overflow: 'auto' }}>
-        {JSON.stringify(params, null, 2)}
-      </pre>
+      <pre><code>{JSON.stringify(params, null, 2)}</code></pre>
 
-      <div style={{ marginTop: '2rem', padding: '1rem', background: '#e8f5e9' }}>
-        <p>Mock search results would appear here...</p>
-        <ul>
-          <li>Result 1 for &quot;{query}&quot;</li>
-          <li>Result 2 for &quot;{query}&quot;</li>
-          <li>Result 3 for &quot;{query}&quot;</li>
-        </ul>
-      </div>
+      <h2>Example Rule</h2>
+      <pre><code>{`{
+  "src": "/search",
+  "dest": "/search-results",
+  "has": [{ "type": "query", "key": "q" }]
+}`}</code></pre>
     </main>
   );
 }
