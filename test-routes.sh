@@ -21,6 +21,7 @@ set -e
 
 # Configuration
 PROJECT_ID="prj_j1FAuTXIWslhtnC2jKNmvfIj3zkS"
+TEAM_ID="team_MtLD9hKuWAvoDd3KmiHs9zUg"
 API_BASE="https://api.vercel.com/v1"
 
 # Colors
@@ -43,16 +44,24 @@ api() {
     local endpoint=$2
     local data=$3
     
+    # Add teamId to query string
+    local url="${API_BASE}${endpoint}"
+    if [[ "$url" == *"?"* ]]; then
+        url="${url}&teamId=${TEAM_ID}"
+    else
+        url="${url}?teamId=${TEAM_ID}"
+    fi
+    
     if [ -n "$data" ]; then
         curl -s -X "$method" \
             -H "Authorization: Bearer $VERCEL_TOKEN" \
             -H "Content-Type: application/json" \
             -d "$data" \
-            "${API_BASE}${endpoint}"
+            "$url"
     else
         curl -s -X "$method" \
             -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "${API_BASE}${endpoint}"
+            "$url"
     fi
 }
 
@@ -72,14 +81,14 @@ cmd_list() {
 }
 
 cmd_add() {
-    echo -e "${BLUE}Adding rewrite rule: /posts/:slug -> /blog/:slug${NC}"
+    echo -e "${BLUE}Adding rewrite rule: /posts/* -> /blog/*${NC}"
     api POST "/projects/${PROJECT_ID}/routes" '{
         "route": {
             "name": "Blog rewrite",
             "description": "Rewrite /posts/:slug to /blog/:slug",
             "route": {
-                "src": "/posts/:slug",
-                "dest": "/blog/:slug"
+                "src": "^/posts/([^/]+)$",
+                "dest": "/blog/$1"
             }
         }
     }' | pretty
@@ -92,7 +101,7 @@ cmd_add_redirect() {
             "name": "Old page redirect",
             "description": "Redirect old-page to home",
             "route": {
-                "src": "/old-page",
+                "src": "^/old-page$",
                 "dest": "/",
                 "status": 308
             }
@@ -107,10 +116,9 @@ cmd_add_headers() {
             "name": "Custom headers",
             "description": "Add custom header to all requests",
             "route": {
-                "src": "/(.*)",
+                "src": "^/(.*)$",
                 "headers": {
-                    "X-Custom-Header": "hello-from-project-routes",
-                    "X-Request-Time": "$now"
+                    "X-Custom-Header": "hello-from-project-routes"
                 },
                 "continue": true
             }
@@ -125,7 +133,7 @@ cmd_add_auth() {
             "name": "Auth redirect",
             "description": "Redirect to login if not authenticated",
             "route": {
-                "src": "/protected",
+                "src": "^/protected$",
                 "dest": "/login",
                 "missing": [{"type": "cookie", "key": "auth"}]
             }
@@ -140,9 +148,23 @@ cmd_add_query() {
             "name": "Search rewrite",
             "description": "Rewrite search to results when query present",
             "route": {
-                "src": "/search",
+                "src": "^/search$",
                 "dest": "/search-results",
                 "has": [{"type": "query", "key": "q"}]
+            }
+        }
+    }' | pretty
+}
+
+cmd_add_api() {
+    echo -e "${BLUE}Adding API catch-all: /v1/api/* -> /api-target/*${NC}"
+    api POST "/projects/${PROJECT_ID}/routes" '{
+        "route": {
+            "name": "API catch-all rewrite",
+            "description": "Rewrite /v1/api/* to /api-target/*",
+            "route": {
+                "src": "^/v1/api/(.*)$",
+                "dest": "/api-target/$1"
             }
         }
     }' | pretty
@@ -180,12 +202,17 @@ cmd_versions() {
 
 cmd_promote() {
     local version_id=$1
-    echo -e "${BLUE}Promoting staging to production...${NC}"
-    local data='{"action": "promote"}'
-    if [ -n "$version_id" ]; then
-        data="{\"action\": \"promote\", \"versionId\": \"${version_id}\"}"
+    if [ -z "$version_id" ]; then
+        echo -e "${YELLOW}No version ID provided, fetching latest staging version...${NC}"
+        version_id=$(api GET "/projects/${PROJECT_ID}/routes/versions" | jq -r '.versions[0].id')
+        if [ -z "$version_id" ] || [ "$version_id" = "null" ]; then
+            echo -e "${RED}No staging version found to promote${NC}"
+            exit 1
+        fi
+        echo -e "${BLUE}Found version: ${version_id}${NC}"
     fi
-    api POST "/projects/${PROJECT_ID}/routes/versions" "$data" | pretty
+    echo -e "${BLUE}Promoting version ${version_id} to production...${NC}"
+    api POST "/projects/${PROJECT_ID}/routes/versions" "{\"action\": \"promote\", \"id\": \"${version_id}\"}" | pretty
 }
 
 cmd_help() {
@@ -195,15 +222,16 @@ cmd_help() {
     echo ""
     echo "Commands:"
     echo "  list          List all routes (staging)"
-    echo "  add           Add a rewrite: /posts/:slug -> /blog/:slug"
+    echo "  add           Add a rewrite: /posts/* -> /blog/*"
     echo "  add-redirect  Add a redirect: /old-page -> / (308)"
     echo "  add-headers   Add headers rule with X-Custom-Header"
     echo "  add-auth      Add auth rule: /protected -> /login (if no cookie)"
     echo "  add-query     Add query rule: /search -> /search-results (if ?q=)"
+    echo "  add-api       Add API catch-all: /v1/api/* -> /api-target/*"
     echo "  delete <id>   Delete a route by ID"
     echo "  delete-all    Delete ALL routes (careful!)"
     echo "  versions      List all versions"
-    echo "  promote [id]  Promote staging to production"
+    echo "  promote [id]  Promote staging (or specific version) to production"
     echo "  help          Show this help"
     echo ""
     echo "Environment:"
@@ -214,6 +242,7 @@ cmd_help() {
     echo "  ./test-routes.sh add"
     echo "  ./test-routes.sh delete abc-123-def"
     echo "  ./test-routes.sh promote"
+    echo "  ./test-routes.sh promote abc-123-def"
 }
 
 # Main
@@ -224,6 +253,7 @@ case "${1:-help}" in
     add-headers) cmd_add_headers ;;
     add-auth)    cmd_add_auth ;;
     add-query)   cmd_add_query ;;
+    add-api)     cmd_add_api ;;
     delete)      cmd_delete "$2" ;;
     delete-all)  cmd_delete_all ;;
     versions)    cmd_versions ;;
