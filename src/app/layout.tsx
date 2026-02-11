@@ -13,6 +13,11 @@ const navItems = [
   { href: '/protected', label: 'Protected' },
   { href: '/search', label: 'Search' },
   { href: '/geo', label: 'Geo' },
+  { href: '/experiment', label: 'A/B Test' },
+  { href: '/external-api', label: 'External' },
+  { href: '/docs', label: 'Docs' },
+  { href: '/cached', label: 'Cache' },
+  { href: '/bot-test', label: 'Bot' },
   { href: '/api/data', label: 'API' },
 ];
 
